@@ -1,0 +1,631 @@
+#+AUTHOR: Samuel Dahlberg
+Literate org-based configuration file.
+
+* Package Management
+** use-package
+   #+BEGIN_SRC emacs-lisp
+     (require 'package)
+     (setq package-enable-at-startup nil)
+     (add-to-list 'package-archives '("melpa" . "http://melpa.org/packages/"))
+     (add-to-list 'package-archives '("gnu" . "http://elpa.gnu.org/packages/"))
+     (package-initialize)
+
+     (unless (package-installed-p 'use-package)
+       (package-refresh-contents)
+       (package-install 'use-package))
+
+     (eval-when-compile
+       (require 'use-package))
+     (require 'diminish)
+     (require 'bind-key)
+   #+END_SRC
+** Local Packages
+   Some packages are stored locally and need to be loaded.
+   #+BEGIN_SRC emacs-lisp
+     (add-to-list 'load-path "~/.emacs.d/packages")
+   #+END_SRC
+
+** Byte Compilation
+   #+BEGIN_SRC emacs-lisp
+     (defun byte-compile-init-dir ()
+       "Byte-compile all your dotfiles."
+       (interactive)
+       (byte-recompile-directory user-emacs-directory 0))
+   #+END_SRC
+
+   #+RESULTS:
+   : byte-compile-init-dir
+
+* Organization
+** Org Mode
+   #+BEGIN_SRC emacs-lisp
+     (use-package org
+       :ensure t
+       :config
+       (setq org-log-done t)
+       (setq org-todo-keywords '((sequence "TODO" "INPROGRESS" "DONE")))
+       (org-babel-do-load-languages
+        'org-babel-load-languages
+        '((C . t)))
+       (setq org-src-fontify-natively t)
+       :bind (("C-c l" . org-store-link)
+              ("C-c a" . org-agenda)))
+   #+END_SRC
+
+   #+RESULTS:
+
+** Projects
+*** Projectile
+    Include projectile for project management and navigation.
+    #+BEGIN_SRC emacs-lisp
+      (use-package projectile
+        :ensure t
+        :config
+        (projectile-mode 1))
+    #+END_SRC
+*** Kill Non Project Buffers
+    #+BEGIN_SRC emacs-lisp
+      (defun kill-non-project-buffers (&optional kill-special)
+        "Kill buffers that do not belong to a `projectile' project.
+
+      With prefix argument (`C-u'), also kill the special buffers."
+        (interactive "P")
+        (let ((bufs (buffer-list (selected-frame))))
+          (dolist (buf bufs)
+            (with-current-buffer buf
+              (let ((buf-name (buffer-name buf)))
+                (when (or (null (projectile-project-p))
+                          (and kill-special
+                               (string-match "^\*" buf-name)))
+                  ;; Preserve buffers with names starting with *scratch or *Messages
+                  (unless (string-match "^\\*\\(\\scratch\\|Messages\\|Neotree\\)" buf-name)
+                    (message "Killing buffer %s" buf-name)
+                    (kill-buffer buf))))))))
+    #+END_SRC
+* Display Preferences
+** Themes
+*** Doom theme
+  #+BEGIN_SRC emacs-lisp
+    (use-package doom-themes
+      :ensure t
+      :config
+      (load-theme 'doom-one t)
+      (setq org-ellipsis "...")
+      ;;   (setq doom-enable-bold t    ; if nil, bolding are universally disabled
+      ;;         doom-enable-italic t  ; if nil, italics are universally disabled
+      ;;         doom-one-brighter-modeline t
+      ;;         doom-one-brighter-comments t
+      ;;         )
+
+
+      ;;   (add-hook 'find-file-hook 'doom-buffer-mode-maybe)
+
+      ;;   ;; if you use auto-revert-mode
+      ;;   (add-hook 'after-revert-hook 'doom-buffer-mode-maybe)
+
+      ;;   ;; brighter minibuffer when active
+      ;;   (add-hook 'minibuffer-setup-hook 'doom-brighten-minibuffer)
+      )
+   #+END_SRC
+** Rainbow Delimiters
+   #+BEGIN_SRC emacs-lisp
+     (use-package rainbow-delimiters
+       :ensure t
+       :config
+       (add-hook 'prog-mode-hook 'rainbow-delimiters-mode))
+   #+END_SRC
+
+** Fonts
+   #+BEGIN_SRC emacs-lisp
+     (add-to-list 'default-frame-alist '(font . "Courier New-8.0" ))
+     (set-face-attribute 'default t :font "Courier New-8.0" )
+   #+END_SRC
+
+** Inhibit startup screens
+   #+BEGIN_SRC emacs-lisp
+     (setq inhibit-startup-screen t)
+     (setq inhibit-splash-screen t)
+   #+END_SRC
+
+** Disable auto-save and backups
+   Backup files are annoying and not useful to me, so disable them.
+   #+BEGIN_SRC emacs-lisp
+     (setq backup-inhibited t)
+     (setq auto-save-default nil)
+   #+END_SRC
+
+** Turn off audible warning bell
+   #+BEGIN_SRC emacs-lisp
+     (setq visible-bell 1)
+   #+END_SRC
+** Hide menu, toolbar and scrollbar
+   #+BEGIN_SRC emacs-lisp
+     (menu-bar-mode -1)
+     (tool-bar-mode -1)
+     (scroll-bar-mode -1)
+   #+END_SRC
+** Fringe settings
+   Remove right-hand fringe to save precious room
+   #+BEGIN_SRC emacs-lisp
+     (fringe-mode '(4 . 0))
+   #+END_SRC
+
+   #+RESULTS:
+
+** Show column numbers
+   I always want to see column numbers
+   #+BEGIN_SRC emacs-lisp
+     (setq column-number-mode t)
+   #+END_SRC
+** Show line numbers in fringe
+   Line numbers are useful in programming modes, but not really in other
+   modes.
+   #+BEGIN_SRC emacs-lisp
+     (use-package nlinum
+       :ensure t
+       :config
+       (add-hook 'prog-mode-hook 'nlinum-mode))
+   #+END_SRC
+
+** Fill settings
+   Enable auto-fill mode and set fill width.
+   #+BEGIN_SRC emacs-lisp
+     (add-hook 'text-mode-hook 'turn-on-auto-fill)
+     (setq-default fill-column 80)
+   #+END_SRC
+
+** Highlight trailing whitespace
+   I like to see if I have trailing whitespace.
+   #+BEGIN_SRC emacs-lisp
+     (setq-default show-trailing-whitespace t)
+     (add-hook 'term-mode-hook (lambda () (setq show-trailing-whitespace nil)))
+   #+END_SRC
+
+** Powerline
+   #+BEGIN_SRC emacs-lisp
+     (use-package powerline
+       :ensure t)
+   #+END_SRC
+** Spaceline
+   #+BEGIN_SRC emacs-lisp
+     (use-package spaceline
+       :ensure t)
+   #+END_SRC
+
+   #+RESULTS:
+
+* Windows, Frames, Buffers
+** Window Dividers
+   #+BEGIN_SRC emacs-lisp
+     (window-divider-mode t)
+   #+END_SRC
+
+   #+RESULTS:
+   : t
+
+** Kill current buffer unconditionally
+  #+BEGIN_SRC emacs-lisp
+    (defun volatile-kill-buffer ()
+    "Kill current buffer unconditionally."
+    (interactive)
+    (let ((buffer-modified-p nil))
+      (kill-buffer (current-buffer))))
+  #+END_SRC
+
+** Revert all buffers
+   #+BEGIN_SRC emacs-lisp
+     (defun revert-all-buffers ()
+       "Refreshes all open buffers from their respective files."
+       (interactive)
+       (dolist (buf (buffer-list))
+         (with-current-buffer buf
+           (when (and (buffer-file-name) (file-exists-p (buffer-file-name)) (not (buffer-modified-p)))
+             (revert-buffer t t t) )))
+       (message "Refreshed open files.") )
+   #+END_SRC
+** Global Text Scale
+   #+BEGIN_SRC emacs-lisp
+     (use-package default-text-scale
+       :ensure t
+       :config
+       (global-set-key (kbd "C-M-=") 'default-text-scale-increase)
+       (global-set-key (kbd "C-M--") 'default-text-scale-decrease))
+   #+END_SRC
+** Set Window Width
+   #+BEGIN_SRC emacs-lisp
+     (defun set-window-width (n)
+       "Set the selected window's width."
+       (adjust-window-trailing-edge
+        (selected-window) (- n (window-width)) t))
+
+     (defun set-80-columns ()
+       "Set the selected window to 80 columns."
+       (interactive)
+       (set-window-width 80))
+   #+END_SRC
+
+* Editing
+** Spaces instead of tabs
+   #+BEGIN_SRC emacs-lisp
+     (setq-default indent-tabs-mode nil)
+   #+END_SRC
+
+   #+RESULTS:
+
+** Autocomplete
+   #+BEGIN_SRC emacs-lisp
+     ;;(use-package auto-complete
+     ;;  :ensure t
+     ;;  :config
+     ;;  (ac-config-default))
+   #+END_SRC
+
+** Counsel
+   #+BEGIN_SRC emacs-lisp
+     (use-package counsel
+       :ensure t)
+
+     (use-package counsel-projectile
+       :ensure t
+       :config
+       (counsel-projectile-on))
+
+     (use-package ggtags
+       :ensure t)
+   #+END_SRC
+** Ivy
+   #+BEGIN_SRC emacs-lisp
+     (use-package ivy
+       :ensure t
+       :config
+       (ivy-mode 1)
+       (setq ivy-height 10)
+       (setq ivy-use-virtual-buffers t)
+       (setq enable-recursive-minibuffers t)
+       (global-set-key "\C-s" 'swiper)
+       (global-set-key (kbd "C-c C-r") 'ivy-resume)
+       (global-set-key (kbd "<f6>") 'ivy-resume)
+       (global-set-key (kbd "M-x") 'counsel-M-x)
+       (global-set-key (kbd "C-x C-f") 'counsel-find-file)
+       (global-set-key (kbd "<f1> f") 'counsel-describe-function)
+       (global-set-key (kbd "<f1> v") 'counsel-describe-variable)
+       (global-set-key (kbd "<f1> l") 'counsel-find-library)
+       (global-set-key (kbd "<f2> i") 'counsel-info-lookup-symbol)
+       (global-set-key (kbd "<f2> u") 'counsel-unicode-char)
+       (global-set-key (kbd "C-c g") 'counsel-git)
+       (global-set-key (kbd "C-c j") 'counsel-git-grep)
+       (global-set-key (kbd "C-c k") 'counsel-ag)
+       (global-set-key (kbd "C-x l") 'counsel-locate)
+       (global-set-key (kbd "C-S-o") 'counsel-rhythmbox))
+
+   #+END_SRC
+** Treemacs
+   #+BEGIN_SRC emacs-lisp
+     (use-package treemacs
+       :ensure t)
+   #+END_SRC
+** Yasnippet
+   #+BEGIN_SRC emacs-lisp
+     (add-to-list 'load-path "~/.emacs.d/packages/yasnippet")
+     (use-package yasnippet
+       :ensure t
+       :config
+       (yas-global-mode 1)
+       (add-to-list 'yas-snippet-dirs "~/.emacs.d/snippets/")
+       (add-to-list 'yas-snippet-dirs "~/.emacs.d/snippets/yasnippet-snippets")
+       (yas-reload-all))
+   #+END_SRC
+* Navigation
+** Evil Mode
+   #+BEGIN_SRC emacs-lisp
+     (use-package evil
+       :ensure t
+       :config)
+   #+END_SRC
+
+** Add org-mode like line moving with keybinding
+   #+BEGIN_SRC emacs-lisp
+     (require 'move-lines)
+     (move-lines-binding)
+   #+END_SRC
+** Add keybinds to move between windows
+   #+BEGIN_SRC emacs-lisp
+
+
+   #+END_SRC
+** Move one word at a time
+   #+BEGIN_SRC emacs-lisp
+     (global-subword-mode 1)
+   #+END_SRC
+** Open file in external app
+   #+BEGIN_SRC emacs-lisp
+     (defun xah-open-in-external-app ()
+       "Open the current file or dired marked files in external app.
+     The app is chosen from your OS's preference.
+     URL `http://ergoemacs.org/emacs/emacs_dired_open_file_in_ext_apps.html'
+     Version 2016-10-15"
+       (interactive)
+       (let* (
+              (-file-list
+               (if (string-equal major-mode "dired-mode")
+                   (dired-get-marked-files)
+                 (list (buffer-file-name))))
+              (-do-it-p (if (<= (length -file-list) 5)
+                            t
+                          (y-or-n-p "Open more than 5 files? "))))
+         (when -do-it-p
+           (cond
+            ((string-equal system-type "windows-nt")
+             (mapc
+              (lambda (-fpath)
+                (w32-shell-execute "open" (replace-regexp-in-string "/" "\\" -fpath t t))) -file-list))
+            ((string-equal system-type "darwin")
+             (mapc
+              (lambda (-fpath)
+                (shell-command
+                 (concat "open " (shell-quote-argument -fpath))))  -file-list))
+            ((string-equal system-type "gnu/linux")
+             (mapc
+              (lambda (-fpath) (let ((process-connection-type nil))
+                                 (start-process "" nil "xdg-open" -fpath))) -file-list))))))
+   #+END_SRC
+
+   #+RESULTS:
+   : xah-open-in-external-app
+
+** Smart move-beggining-of-line
+   #+BEGIN_SRC emacs-lisp
+     (defun smarter-move-beginning-of-line (arg)
+       "Move point back to indentation of beginning of line.
+
+     Move point to the first non-whitespace character on this line.
+     If point is already there, move to the beginning of the line.
+     Effectively toggle between the first non-whitespace character and
+     the beginning of the line.
+
+     If ARG is not nil or 1, move forward ARG - 1 lines first.  If
+     point reaches the beginning or end of the buffer, stop there."
+       (interactive "^p")
+       (setq arg (or arg 1))
+
+       ;; Move lines first
+       (when (/= arg 1)
+         (let ((line-move-visual nil))
+           (forward-line (1- arg))))
+
+       (let ((orig-point (point)))
+         (back-to-indentation)
+         (when (= orig-point (point))
+           (move-beginning-of-line 1))))
+
+     ;; remap C-a to `smarter-move-beginning-of-line'
+     (global-set-key [remap move-beginning-of-line]
+                     'smarter-move-beginning-of-line)
+   #+END_SRC
+
+* Version Control
+* Terminal
+**  Use cygwin bash for shell
+  #+BEGIN_SRC emacs-lisp
+    ;; Sets your shell to use cygwin's bash, if Emacs finds it's running
+    ;; under Windows and c:\cygwin exists. Assumes that C:\cygwin\bin is
+    ;; not already in your Windows Path (it generally should not be).
+    (let* ((cygwin-root "c:/cygwin64")
+           (cygwin-bin (concat cygwin-root "/bin")))
+      (when (and (eq 'windows-nt system-type)
+                 (file-readable-p cygwin-root))
+
+        (setq exec-path (cons cygwin-bin exec-path))
+        (setenv "PATH" (concat cygwin-bin ";" (getenv "PATH")))
+
+        ;; By default use the Windows HOME.
+        ;; Otherwise, uncomment below to set a HOME
+        ;;      (setenv "HOME" (concat cygwin-root "/home/eric"))
+
+        ;; NT-emacs assumes a Windows shell. Change to bash.
+        (setq shell-file-name "bash")
+        (setenv "SHELL" shell-file-name)
+        (setq explicit-shell-file-name shell-file-name)
+
+        ;; This removes unsightly ^M characters that would otherwise
+        ;; appear in the output of java applications.
+        (add-hook 'comint-output-filter-functions 'comint-strip-ctrl-m)))
+  #+END_SRC
+** Multiterm
+   #+BEGIN_SRC emacs-lisp
+     (use-package multi-term
+       :ensure t)
+   #+END_SRC
+
+* Programming
+** GTags
+   #+BEGIN_SRC emacs-lisp
+     (add-hook 'c-mode-hook 'counsel-gtags-mode)
+     (add-hook 'c++-mode-hook 'counsel-gtags-mode)
+     (add-hook 'cc-mode-hook 'counsel-gtags-mode)
+
+     (with-eval-after-load 'counsel-gtags
+       (define-key counsel-gtags-mode-map (kbd "M-t") 'counsel-gtags-find-definition)
+       (define-key counsel-gtags-mode-map (kbd "M-r") 'counsel-gtags-find-reference)
+       (define-key counsel-gtags-mode-map (kbd "M-s") 'counsel-gtags-find-symbol)
+       (define-key counsel-gtags-mode-map (kbd "M-,") 'counsel-gtags-go-backward))
+   #+END_SRC
+
+   #+RESULTS:
+   : counsel-gtags-go-backward
+
+** Auto-revert for programming
+   #+BEGIN_SRC emacs-lisp
+     ;;(add-hook 'c-mode-common-hook 'auto-revert-mode)
+   #+END_SRC
+** Enforce 80 char column width
+   #+BEGIN_SRC emacs-lisp
+     (use-package column-enforce-mode
+       :ensure t
+       :config
+       (add-hook 'prog-mode-hook 'column-enforce-mode))
+   #+END_SRC
+
+** C Mode
+   Here are some useful tweaks for programming in C.
+*** Additional indentation
+Emacs uses GNU style indentation by default.  Change it to Linux/UNIX style.
+   #+BEGIN_SRC emacs-lisp
+     (setq c-default-style "linux"
+           c-basic-offset 3)
+
+     (defun cust-set-offset-hook ()
+       (c-set-offset 'case-label '+)
+       (c-set-offset 'statement-case-intro '+))
+     (add-hook 'c-mode-hook 'cust-set-offset-hook)
+   #+END_SRC
+
+   #+RESULTS:
+   | (lambda nil (setq comment-start //) (setq comment-end )) | cust-set-offset-hook |
+
+*** Additional syntax highlighting
+    Some common c structures do not have any fontification. Add some additional
+    fonts to improve readability.
+*** Change comment style
+    #+BEGIN_SRC emacs-lisp
+      (add-hook 'c-mode-hook (lambda()
+                               (setq comment-start "//")
+                               (setq comment-end "")))
+    #+END_SRC
+
+** MATLAB Mode
+   #+BEGIN_SRC emacs-lisp
+     (autoload 'matlab-mode "matlab" "Matlab Editing Mode" t)
+     (add-to-list
+      'auto-mode-alist
+      '("\\.m$" . matlab-mode))
+     (setq matlab-indent-function t)
+     (setq matlab-shell-command "matlab")
+   #+END_SRC
+** Toggle comment line/region
+   #+BEGIN_SRC emacs-lisp
+     (defun comment-or-uncomment-region-or-line ()
+       "Comments or uncomments the region or the current line if there's no active
+       region."
+       (interactive)
+       (let (beg end)
+         (if (region-active-p)
+             (setq beg (region-beginning) end (region-end))
+           (setq beg (line-beginning-position) end (line-end-position)))
+         (comment-or-uncomment-region beg end)))
+   #+END_SRC
+
+* Compiling
+** Prevent Interactive Compilation
+   #+BEGIN_SRC emacs-lisp
+      (setq compilation-read-command nil)
+   #+END_SRC
+
+   #+RESULTS:
+
+* Keybind
+  Regular way to set keybinds is =(global-set-key /key/ /binding/)=.
+** Use unbound.el to list unbound keybindings.
+  #+BEGIN_SRC emacs-lisp
+    (use-package unbound
+      :ensure t)
+  #+END_SRC
+** Make C-z act as a prefix
+   #+BEGIN_SRC emacs-lisp
+     (global-unset-key "\C-z")
+
+     (defalias 'ctl-z-keymap (make-sparse-keymap))
+     (defvar ctl-z-map (symbol-function 'ctl-z-keymap)
+       "Global keymap for characters following C-z.")
+     (define-key global-map "\C-z" 'ctl-z-keymap)
+
+     (define-key ctl-z-map "\C-c" 'help-for-help)
+
+   #+END_SRC
+** Make C-r act as a prefix
+   #+BEGIN_SRC emacs-lisp
+     (global-unset-key "\C-r")
+
+     (defalias 'ctl-r-keymap (make-sparse-keymap))
+     (defvar ctl-r-map (symbol-function 'ctl-r-keymap)
+       "Global keymap for characters following C-z.")
+     (define-key global-map "\C-r" 'ctl-r-keymap)
+
+     (define-key ctl-r-map "\C-c" 'help-for-help)
+   #+END_SRC
+** Bind custom keys
+   #+BEGIN_SRC emacs-lisp
+     (global-set-key (kbd "C-c o") 'xah-open-in-external-app)
+
+     (global-set-key (kbd "C-z w") 'delete-trailing-whitespace)
+     (global-set-key (kbd "C-z r") 'revert-all-buffers)
+     (global-set-key (kbd "C-z p") 'xah-copy-file-path)
+     (global-set-key (kbd "C-z u") 'uncomment-region)
+     (global-set-key (kbd "C-z b") 'kill-non-project-buffers)
+     (global-set-key (kbd "C-z q") 'unfill-region)
+     (global-set-key (kbd "C-z e") 'evil-mode)
+
+     (global-set-key (kbd "C-z g") 'ggtags-find-definition)
+
+     (global-set-key (kbd "C-z C-c") 'comment-or-uncomment-region-or-line)
+     (global-set-key (kbd "C-z C-k") 'volatile-kill-buffer)
+     (global-set-key (kbd "C-z C-a") 'auto-complete-mode)
+
+     (global-set-key (kbd "C-x r p") 'replace-rectangle)
+     (global-set-key (kbd "C-x r u") 'sd-numeric-fill-rectangle)
+
+     (global-set-key (kbd "C-r s") 'replace-string)
+     (global-set-key (kbd "C-r x") 'replace-regexp)
+
+     (global-set-key (kbd "C-M-y") 'counsel-yank-pop)
+
+     (global-set-key (kbd "C-c C-<left>")  'windmove-left)
+     (global-set-key (kbd "C-c C-<right>") 'windmove-right)
+     (global-set-key (kbd "C-c C-<up>")    'windmove-up)
+     (global-set-key (kbd "C-c C-<down>")  'windmove-down)
+
+     (global-set-key (kbd "C-'")  'compile)
+
+
+   #+END_SRC
+
+   #+RESULTS:
+   : compile
+
+* Registers
+  Add often used files to registers for quick navigation.  Form for adding to
+  the register is =(set-register ?r '(file . /name/))=
+  #+BEGIN_SRC emacs-lisp
+      ;;(set-register ?1 '(file . "h:/projects/diplr_troubleshoot_tool/DTTD/dttd.c"))
+  #+END_SRC
+* User Defined Functions
+** Copy file path of current buffer
+   #+BEGIN_SRC emacs-lisp
+     (defun xah-copy-file-path (&optional *dir-path-only-p)
+       "Copy the current buffer's file path or dired path to `kill-ring'.
+     Result is full path.
+     If `universal-argument' is called first, copy only the dir path.
+     URL `http://ergoemacs.org/emacs/emacs_copy_file_path.html'
+     Version 2017-01-27"
+       (interactive "P")
+       (let ((-fpath
+              (if (equal major-mode 'dired-mode)
+                  (expand-file-name default-directory)
+                (if (buffer-file-name)
+                    (buffer-file-name)
+                  (user-error "Current buffer is not associated with a file.")))))
+         (kill-new
+          (if *dir-path-only-p
+              (progn
+                (message "Directory path copied: %s" (file-name-directory -fpath))
+                (file-name-directory -fpath))
+            (progn
+              (message "File path copied: %s" -fpath)
+              -fpath )))))
+   #+END_SRC
+* Initialization
+** Open to default buffer
+   Automatically open a todo org document on startup
+   #+BEGIN_SRC emacs-lisp
+     (find-file "~/Dropbox/TODO.org")
+   #+END_SRC
