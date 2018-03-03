@@ -98,10 +98,10 @@ Literate org-based configuration file.
       (setq org-ellipsis "...")
       )
    #+END_SRC
-** Inhibit startup screens
+** Fonts
    #+BEGIN_SRC emacs-lisp
-     (setq inhibit-startup-screen t)
-     (setq inhibit-splash-screen t)
+     (add-to-list 'default-frame-alist '(font . "Courier New-8.0" ))
+     (set-face-attribute 'default t :font "Courier New-8.0" )
    #+END_SRC
 ** Hide menu, toolbar and scrollbar
    #+BEGIN_SRC emacs-lisp
@@ -110,15 +110,27 @@ Literate org-based configuration file.
      (scroll-bar-mode -1)
    #+END_SRC
 
+** Turn off audible warning bell
+   #+BEGIN_SRC emacs-lisp
+     (setq visible-bell 1)
+   #+END_SRC
+** Inhibit startup screens
+   #+BEGIN_SRC emacs-lisp
+     (setq inhibit-startup-screen t)
+     (setq inhibit-splash-screen t)
+   #+END_SRC
+
+** Disable auto-save and backups
+   Backup files are annoying and not useful to me, so disable them.
+   #+BEGIN_SRC emacs-lisp
+     (setq backup-inhibited t)
+     (setq auto-save-default nil)
+   #+END_SRC
+
 ** Show column numbers
    I always want to see column numbers
    #+BEGIN_SRC emacs-lisp
      (setq column-number-mode t)
-   #+END_SRC
-
-** Turn off audible warning bell
-   #+BEGIN_SRC emacs-lisp
-     (setq visible-bell 1)
    #+END_SRC
 
 ** Pretty org-mode bullets
@@ -130,19 +142,6 @@ Literate org-based configuration file.
              '("◉" "◎" "<img draggable="false" class="emoji" alt="⚫" src="https://s0.wp.com/wp-content/mu-plugins/wpcom-smileys/twemoji/2/svg/26ab.svg">" "○" "►" "◇"))
        :config
        (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1))))
-   #+END_SRC
-
-** Fonts
-   #+BEGIN_SRC emacs-lisp
-     (add-to-list 'default-frame-alist '(font . "Courier New-8.0" ))
-     (set-face-attribute 'default t :font "Courier New-8.0" )
-   #+END_SRC
-
-** Disable auto-save and backups
-   Backup files are annoying and not useful to me, so disable them.
-   #+BEGIN_SRC emacs-lisp
-     (setq backup-inhibited t)
-     (setq auto-save-default nil)
    #+END_SRC
 ** Fringe settings
    Remove right-hand fringe to save precious room
@@ -185,8 +184,14 @@ Literate org-based configuration file.
 ** Powerline
    #+BEGIN_SRC emacs-lisp
      (use-package powerline
-       :ensure t)
+       :ensure t
+       :config
+       (powerline-default-theme))
    #+END_SRC
+
+   #+RESULTS:
+   : t
+
 ** Spaceline
    #+BEGIN_SRC emacs-lisp
      (use-package spaceline
@@ -200,10 +205,6 @@ Literate org-based configuration file.
    #+BEGIN_SRC emacs-lisp
      (window-divider-mode t)
    #+END_SRC
-
-   #+RESULTS:
-   : t
-
 ** Kill current buffer unconditionally
   #+BEGIN_SRC emacs-lisp
     (defun volatile-kill-buffer ()
@@ -375,32 +376,6 @@ Literate org-based configuration file.
 
 * Version Control
 * Terminal
-**  Use cygwin bash for shell
-  #+BEGIN_SRC emacs-lisp
-    ;; Sets your shell to use cygwin's bash, if Emacs finds it's running
-    ;; under Windows and c:\cygwin exists. Assumes that C:\cygwin\bin is
-    ;; not already in your Windows Path (it generally should not be).
-    (let* ((cygwin-root "c:/cygwin64")
-           (cygwin-bin (concat cygwin-root "/bin")))
-      (when (and (eq 'windows-nt system-type)
-                 (file-readable-p cygwin-root))
-
-        (setq exec-path (cons cygwin-bin exec-path))
-        (setenv "PATH" (concat cygwin-bin ";" (getenv "PATH")))
-
-        ;; By default use the Windows HOME.
-        ;; Otherwise, uncomment below to set a HOME
-        ;;      (setenv "HOME" (concat cygwin-root "/home/eric"))
-
-        ;; NT-emacs assumes a Windows shell. Change to bash.
-        (setq shell-file-name "bash")
-        (setenv "SHELL" shell-file-name)
-        (setq explicit-shell-file-name shell-file-name)
-
-        ;; This removes unsightly ^M characters that would otherwise
-        ;; appear in the output of java applications.
-        (add-hook 'comint-output-filter-functions 'comint-strip-ctrl-m)))
-  #+END_SRC
 ** Multiterm
    #+BEGIN_SRC emacs-lisp
      (use-package multi-term
@@ -425,6 +400,8 @@ Literate org-based configuration file.
    : counsel-gtags-go-backward
 
 ** Auto-revert for programming
+   Used to be useful when editing from multiple applications. No longer in use
+   due to long load pauses.
    #+BEGIN_SRC emacs-lisp
      ;;(add-hook 'c-mode-common-hook 'auto-revert-mode)
    #+END_SRC
@@ -434,6 +411,18 @@ Literate org-based configuration file.
        :ensure t
        :config
        (add-hook 'prog-mode-hook 'column-enforce-mode))
+   #+END_SRC
+** Toggle comment line/region
+   #+BEGIN_SRC emacs-lisp
+     (defun comment-or-uncomment-region-or-line ()
+       "Comments or uncomments the region or the current line if there's no active
+       region."
+       (interactive)
+       (let (beg end)
+         (if (region-active-p)
+             (setq beg (region-beginning) end (region-end))
+           (setq beg (line-beginning-position) end (line-end-position)))
+         (comment-or-uncomment-region beg end)))
    #+END_SRC
 
 ** C Mode
@@ -460,7 +449,6 @@ Literate org-based configuration file.
                                (setq comment-start "//")
                                (setq comment-end "")))
     #+END_SRC
-
 ** MATLAB Mode
    #+BEGIN_SRC emacs-lisp
      (autoload 'matlab-mode "matlab" "Matlab Editing Mode" t)
@@ -470,25 +458,11 @@ Literate org-based configuration file.
      (setq matlab-indent-function t)
      (setq matlab-shell-command "matlab")
    #+END_SRC
-** Toggle comment line/region
-   #+BEGIN_SRC emacs-lisp
-     (defun comment-or-uncomment-region-or-line ()
-       "Comments or uncomments the region or the current line if there's no active
-       region."
-       (interactive)
-       (let (beg end)
-         (if (region-active-p)
-             (setq beg (region-beginning) end (region-end))
-           (setq beg (line-beginning-position) end (line-end-position)))
-         (comment-or-uncomment-region beg end)))
-   #+END_SRC
 
 ** cc-mode
 *** Find corresponding h/hh/hpp/c/cc/cpp file
     #+BEGIN_SRC emacs-lisp
-      (add-hook 'c-mode-common-hook
-                (lambda()
-                  (local-set-key  (kbd "C-c f") 'ff-find-other-file)))
+      (define-key c-mode-base-map (kbd "C-c f") 'ff-find-other-file)
     #+END_SRC
 ** Web-mode
    #+BEGIN_SRC emacs-lisp
