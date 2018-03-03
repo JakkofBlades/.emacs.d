@@ -54,9 +54,14 @@ Literate org-based configuration file.
 
    #+RESULTS:
 
+** Org Wiki
+   #+BEGIN_SRC emacs-lisp
+     (use-package org-wiki)
+   #+END_SRC
 ** Projects
 *** Projectile
-    Include projectile for project management and navigation.
+    Include projectile for project management and navigation.  Currently causing
+    performance issues so its disabled
     #+BEGIN_SRC emacs-lisp
       ;; (use-package projectile
       ;;   :ensure t
@@ -91,28 +96,40 @@ Literate org-based configuration file.
       :config
       (load-theme 'doom-one t)
       (setq org-ellipsis "...")
-      ;;   (setq doom-enable-bold t    ; if nil, bolding are universally disabled
-      ;;         doom-enable-italic t  ; if nil, italics are universally disabled
-      ;;         doom-one-brighter-modeline t
-      ;;         doom-one-brighter-comments t
-      ;;         )
-
-
-      ;;   (add-hook 'find-file-hook 'doom-buffer-mode-maybe)
-
-      ;;   ;; if you use auto-revert-mode
-      ;;   (add-hook 'after-revert-hook 'doom-buffer-mode-maybe)
-
-      ;;   ;; brighter minibuffer when active
-      ;;   (add-hook 'minibuffer-setup-hook 'doom-brighten-minibuffer)
       )
    #+END_SRC
-** Rainbow Delimiters
+** Inhibit startup screens
    #+BEGIN_SRC emacs-lisp
-     (use-package rainbow-delimiters
+     (setq inhibit-startup-screen t)
+     (setq inhibit-splash-screen t)
+   #+END_SRC
+** Hide menu, toolbar and scrollbar
+   #+BEGIN_SRC emacs-lisp
+     (menu-bar-mode -1)
+     (tool-bar-mode -1)
+     (scroll-bar-mode -1)
+   #+END_SRC
+
+** Show column numbers
+   I always want to see column numbers
+   #+BEGIN_SRC emacs-lisp
+     (setq column-number-mode t)
+   #+END_SRC
+
+** Turn off audible warning bell
+   #+BEGIN_SRC emacs-lisp
+     (setq visible-bell 1)
+   #+END_SRC
+
+** Pretty org-mode bullets
+   #+BEGIN_SRC emacs-lisp
+     (use-package org-bullets
        :ensure t
+       :init
+       (setq org-bullets-bullet-list
+             '("◉" "◎" "<img draggable="false" class="emoji" alt="⚫" src="https://s0.wp.com/wp-content/mu-plugins/wpcom-smileys/twemoji/2/svg/26ab.svg">" "○" "►" "◇"))
        :config
-       (add-hook 'prog-mode-hook 'rainbow-delimiters-mode))
+       (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1))))
    #+END_SRC
 
 ** Fonts
@@ -121,28 +138,11 @@ Literate org-based configuration file.
      (set-face-attribute 'default t :font "Courier New-8.0" )
    #+END_SRC
 
-** Inhibit startup screens
-   #+BEGIN_SRC emacs-lisp
-     (setq inhibit-startup-screen t)
-     (setq inhibit-splash-screen t)
-   #+END_SRC
-
 ** Disable auto-save and backups
    Backup files are annoying and not useful to me, so disable them.
    #+BEGIN_SRC emacs-lisp
      (setq backup-inhibited t)
      (setq auto-save-default nil)
-   #+END_SRC
-
-** Turn off audible warning bell
-   #+BEGIN_SRC emacs-lisp
-     (setq visible-bell 1)
-   #+END_SRC
-** Hide menu, toolbar and scrollbar
-   #+BEGIN_SRC emacs-lisp
-     (menu-bar-mode -1)
-     (tool-bar-mode -1)
-     (scroll-bar-mode -1)
    #+END_SRC
 ** Fringe settings
    Remove right-hand fringe to save precious room
@@ -151,12 +151,6 @@ Literate org-based configuration file.
    #+END_SRC
 
    #+RESULTS:
-
-** Show column numbers
-   I always want to see column numbers
-   #+BEGIN_SRC emacs-lisp
-     (setq column-number-mode t)
-   #+END_SRC
 ** Show line numbers in fringe
    Line numbers are useful in programming modes, but not really in other
    modes.
@@ -179,6 +173,13 @@ Literate org-based configuration file.
    #+BEGIN_SRC emacs-lisp
      (setq-default show-trailing-whitespace t)
      (add-hook 'term-mode-hook (lambda () (setq show-trailing-whitespace nil)))
+   #+END_SRC
+** Rainbow Delimiters
+   #+BEGIN_SRC emacs-lisp
+     (use-package rainbow-delimiters
+       :ensure t
+       :config
+       (add-hook 'prog-mode-hook 'rainbow-delimiters-mode))
    #+END_SRC
 
 ** Powerline
@@ -247,8 +248,6 @@ Literate org-based configuration file.
      (setq-default indent-tabs-mode nil)
    #+END_SRC
 
-   #+RESULTS:
-
 ** Autocomplete
    #+BEGIN_SRC emacs-lisp
      ;;(use-package auto-complete
@@ -289,7 +288,6 @@ Literate org-based configuration file.
        :config
        (yas-global-mode 1)
        (add-to-list 'yas-snippet-dirs "~/.emacs.d/snippets/")
-       (add-to-list 'yas-snippet-dirs "~/.emacs.d/snippets/yasnippet-snippets")
        (yas-reload-all))
    #+END_SRC
 * Navigation
@@ -304,11 +302,6 @@ Literate org-based configuration file.
    #+BEGIN_SRC emacs-lisp
      (require 'move-lines)
      (move-lines-binding)
-   #+END_SRC
-** Add keybinds to move between windows
-   #+BEGIN_SRC emacs-lisp
-
-
    #+END_SRC
 ** Move one word at a time
    #+BEGIN_SRC emacs-lisp
@@ -350,7 +343,7 @@ Literate org-based configuration file.
    #+RESULTS:
    : xah-open-in-external-app
 
-** Smart move-beggining-of-line
+** Smart move-beginning-of-line
    #+BEGIN_SRC emacs-lisp
      (defun smarter-move-beginning-of-line (arg)
        "Move point back to indentation of beginning of line.
@@ -377,6 +370,8 @@ Literate org-based configuration file.
 
      ;; remap C-a to `smarter-move-beginning-of-line'
    #+END_SRC
+
+** Mark Ring Navigation
 
 * Version Control
 * Terminal
@@ -444,19 +439,17 @@ Literate org-based configuration file.
 ** C Mode
    Here are some useful tweaks for programming in C.
 *** Additional indentation
-Emacs uses GNU style indentation by default.  Change it to Linux/UNIX style.
+    Emacs uses GNU style indentation by default.  Change it to Linux/UNIX style.
    #+BEGIN_SRC emacs-lisp
      (setq c-default-style "linux"
            c-basic-offset 3)
 
-     (defun cust-set-offset-hook ()
+     (defun cust-set-c-offset-hook ()
        (c-set-offset 'case-label '+)
-       (c-set-offset 'statement-case-intro '+))
-     (add-hook 'c-mode-hook 'cust-set-offset-hook)
+       (c-set-offset 'statement-case-intro '+)
+       (c-set-offset 'innamespace '0))
+     (add-hook 'c-mode-hook 'cust-set-c-offset-hook)
    #+END_SRC
-
-   #+RESULTS:
-   | (lambda nil (setq comment-start //) (setq comment-end )) | cust-set-offset-hook |
 
 *** Additional syntax highlighting
     Some common c structures do not have any fontification. Add some additional
@@ -490,6 +483,21 @@ Emacs uses GNU style indentation by default.  Change it to Linux/UNIX style.
          (comment-or-uncomment-region beg end)))
    #+END_SRC
 
+** cc-mode
+*** Find corresponding h/hh/hpp/c/cc/cpp file
+    #+BEGIN_SRC emacs-lisp
+      (add-hook 'c-mode-common-hook
+                (lambda()
+                  (local-set-key  (kbd "C-c f") 'ff-find-other-file)))
+    #+END_SRC
+** Web-mode
+   #+BEGIN_SRC emacs-lisp
+     (use-package web-mode
+       :ensure t)
+   #+END_SRC
+
+   #+RESULTS:
+
 * Compiling
 ** Prevent Interactive Compilation
    #+BEGIN_SRC emacs-lisp
@@ -500,6 +508,12 @@ Emacs uses GNU style indentation by default.  Change it to Linux/UNIX style.
 
 * Keybind
   Regular way to set keybinds is =(global-set-key /key/ /binding/)=.
+** Hydra
+   #+BEGIN_SRC emacs-lisp
+     (use-package hydra
+       :ensure t)
+   #+END_SRC
+
 ** Use unbound.el to list unbound keybindings.
   #+BEGIN_SRC emacs-lisp
     (use-package unbound
@@ -561,6 +575,7 @@ Emacs uses GNU style indentation by default.  Change it to Linux/UNIX style.
      (global-set-key (kbd "C-z b") 'kill-non-project-buffers)
      (global-set-key (kbd "C-z q") 'unfill-region)
      (global-set-key (kbd "C-z e") 'evil-mode)
+     (global-set-key (kbd "C-z h")  'org-html-export-to-html)
 
      (global-set-key (kbd "C-z g") 'ggtags-find-definition)
 
@@ -589,6 +604,8 @@ Emacs uses GNU style indentation by default.  Change it to Linux/UNIX style.
    #+RESULTS:
    : compile
 
+
+** Bind hydras
 * Registers
   Add often used files to registers for quick navigation.  Form for adding to
   the register is =(set-register ?r '(file . /name/))=
