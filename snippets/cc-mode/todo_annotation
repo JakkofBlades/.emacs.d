@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: todo_annotation
+# key: todo
+# --
+// @TODO dahlbergs: $0

@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: note_annotation
+# key: note
+# --
+// @NOTE dahlbergs: $0

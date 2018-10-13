@@ -13,14 +13,20 @@
  ;; If there is more than one, they won't work right.
  '(custom-safe-themes
    (quote
-    ("9f569b5e066dd6ca90b3578ff46659bc09a8764e81adf6265626d7dc0fac2a64" "a8245b7cc985a0610d71f9852e9f2767ad1b852c2bdea6f4aadc12cce9c4d6d0" "8aebf25556399b58091e533e455dd50a6a9cba958cc4ebb0aab175863c25b9a4" default)))
+    ("7527f3308a83721f9b6d50a36698baaedc79ded9f6d5bd4e9a28a22ab13b3cb1" default)))
+ '(org-agenda-files (quote ("~/Dropbox/TODO.org")))
  '(package-selected-packages
    (quote
-    (cmake-mode ggtags htmlize spaceline counsel-gtags treemacs powerline solarized-theme undo-tree evil atom-one-dark-theme unbound multi-term counsel-projectile projectile yasnippet web-mode use-package org-bullets neotree matlab-mode highlight-parentheses flycheck-google-cpplint doom-themes counsel auto-complete))))
+    (elisp-refs org-chef yasnippet web-mode use-package unbound treemacs spaceline rainbow-delimiters org-bullets nord-theme nlinum multi-term htmlize ggtags evil doom-themes default-text-scale counsel-projectile counsel-gtags column-enforce-mode cmake-mode))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(font-lock-comment-face ((t (:foreground "#1BA218"))))
- '(fringe ((t (:inherit default :foreground "#8f949a")))))
+ '(default ((((class color) (min-colors 89)) (:foreground "#D8DEE9" :background "#2E3440"))))
+ '(font-lock-comment-delimiter-face ((t (:foreground "#6ca68a"))))
+ '(font-lock-comment-face ((t (:foreground "#6cb68a"))))
+ '(font-lock-doc-face ((t (:foreground "#6cd68a"))))
+ '(window-divider ((t (:background "#4C566A" :foreground "#4C566A"))))
+ '(window-divider-first-pixel ((t (:background "#4C566A" :foreground "#4C566A"))))
+ '(window-divider-last-pixel ((t (:background "#4C566A" :foreground "#4C566A")))))

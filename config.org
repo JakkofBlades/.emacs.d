@@ -1,4 +1,6 @@
 #+AUTHOR: Samuel Dahlberg
+#+PROPERTY: header-args:emacs-lisp :results silent
+
 Literate org-based configuration file.
 
 * Package Management
@@ -8,7 +10,6 @@ Literate org-based configuration file.
      (setq package-enable-at-startup nil)
      (add-to-list 'package-archives '("melpa" . "http://melpa.org/packages/"))
      (add-to-list 'package-archives '("gnu" . "http://elpa.gnu.org/packages/"))
-     (package-initialize)
 
      (unless (package-installed-p 'use-package)
        (package-refresh-contents)
@@ -32,10 +33,6 @@ Literate org-based configuration file.
        (interactive)
        (byte-recompile-directory user-emacs-directory 0))
    #+END_SRC
-
-   #+RESULTS:
-   : byte-compile-init-dir
-
 * Organization
 ** Org Mode
    #+BEGIN_SRC emacs-lisp
@@ -43,163 +40,37 @@ Literate org-based configuration file.
        :ensure t
        :config
        (setq org-log-done t)
+
        (setq org-todo-keywords '((sequence "TODO" "INPROGRESS" "DONE")))
        (org-babel-do-load-languages
         'org-babel-load-languages
         '((C . t)))
+
+       (setq org-agenda-restore-windows-after-quit t)
        (setq org-src-fontify-natively t)
        :bind (("C-c l" . org-store-link)
               ("C-c a" . org-agenda)))
-   #+END_SRC
-
-   #+RESULTS:
-
-** Org Wiki
-   #+BEGIN_SRC emacs-lisp
-     (use-package org-wiki)
    #+END_SRC
 ** Projects
 *** Projectile
     Include projectile for project management and navigation.  Currently causing
     performance issues so its disabled
     #+BEGIN_SRC emacs-lisp
-      ;; (use-package projectile
-      ;;   :ensure t
-      ;;   :config
-      ;;   (projectile-mode 1))
+      (use-package projectile
+        :ensure t
+        :config
+        (projectile-mode t))
     #+END_SRC
-*** Kill Non Project Buffers
-    #+BEGIN_SRC emacs-lisp
-      ;; (defun kill-non-project-buffers (&optional kill-special)
-      ;;   "Kill buffers that do not belong to a `projectile' project.
-
-      ;; With prefix argument (`C-u'), also kill the special buffers."
-      ;;   (interactive "P")
-      ;;   (let ((bufs (buffer-list (selected-frame))))
-      ;;     (dolist (buf bufs)
-      ;;       (with-current-buffer buf
-      ;;         (let ((buf-name (buffer-name buf)))
-      ;;           (when (or (null (projectile-project-p))
-      ;;                     (and kill-special
-      ;;                          (string-match "^\*" buf-name)))
-      ;;             ;; Preserve buffers with names starting with *scratch or *Messages
-      ;;             (unless (string-match "^\\*\\(\\scratch\\|Messages\\|Neotree\\)" buf-name)
-      ;;               (message "Killing buffer %s" buf-name)
-      ;;               (kill-buffer buf))))))))
-    #+END_SRC
-* Display Preferences
-** Themes
-*** Doom theme
-  #+BEGIN_SRC emacs-lisp
-    (use-package doom-themes
-      :ensure t
-      :config
-      (load-theme 'doom-one t)
-      (setq org-ellipsis "...")
-      )
-   #+END_SRC
-** Fonts
+** Org Chef
    #+BEGIN_SRC emacs-lisp
-     (add-to-list 'default-frame-alist '(font . "Courier New-8.0" ))
-     (set-face-attribute 'default t :font "Courier New-8.0" )
-   #+END_SRC
-** Hide menu, toolbar and scrollbar
-   #+BEGIN_SRC emacs-lisp
-     (menu-bar-mode -1)
-     (tool-bar-mode -1)
-     (scroll-bar-mode -1)
-   #+END_SRC
-
-** Turn off audible warning bell
-   #+BEGIN_SRC emacs-lisp
-     (setq visible-bell 1)
-   #+END_SRC
-** Inhibit startup screens
-   #+BEGIN_SRC emacs-lisp
-     (setq inhibit-startup-screen t)
-     (setq inhibit-splash-screen t)
-   #+END_SRC
-
-** Disable auto-save and backups
-   Backup files are annoying and not useful to me, so disable them.
-   #+BEGIN_SRC emacs-lisp
-     (setq backup-inhibited t)
-     (setq auto-save-default nil)
-   #+END_SRC
-
-** Show column numbers
-   I always want to see column numbers
-   #+BEGIN_SRC emacs-lisp
-     (setq column-number-mode t)
-   #+END_SRC
-
-** Pretty org-mode bullets
-   #+BEGIN_SRC emacs-lisp
-     (use-package org-bullets
-       :ensure t
-       :init
-       (setq org-bullets-bullet-list
-             '("◉" "◎" "<img draggable="false" class="emoji" alt="⚫" src="https://s0.wp.com/wp-content/mu-plugins/wpcom-smileys/twemoji/2/svg/26ab.svg">" "○" "►" "◇"))
-       :config
-       (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1))))
-   #+END_SRC
-** Fringe settings
-   Remove right-hand fringe to save precious room
-   #+BEGIN_SRC emacs-lisp
-     (fringe-mode '(4 . 0))
-   #+END_SRC
-
-   #+RESULTS:
-** Show line numbers in fringe
-   Line numbers are useful in programming modes, but not really in other
-   modes.
-   #+BEGIN_SRC emacs-lisp
-     (use-package nlinum
+     (use-package org-chef
        :ensure t
        :config
-       (add-hook 'prog-mode-hook 'nlinum-mode))
+       (setq org-capture-templates
+             '(("c" "Cookbook" entry (file "~/Dropbox/org/cookbook.org")
+                "%(org-chef-get-recipe-from-url)"
+                :empty-lines 1))))
    #+END_SRC
-
-** Fill settings
-   Enable auto-fill mode and set fill width.
-   #+BEGIN_SRC emacs-lisp
-     (add-hook 'text-mode-hook 'turn-on-auto-fill)
-     (setq-default fill-column 80)
-   #+END_SRC
-
-** Highlight trailing whitespace
-   I like to see if I have trailing whitespace.
-   #+BEGIN_SRC emacs-lisp
-     (setq-default show-trailing-whitespace t)
-     (add-hook 'term-mode-hook (lambda () (setq show-trailing-whitespace nil)))
-   #+END_SRC
-** Rainbow Delimiters
-   #+BEGIN_SRC emacs-lisp
-     (use-package rainbow-delimiters
-       :ensure t
-       :config
-       (add-hook 'prog-mode-hook 'rainbow-delimiters-mode))
-   #+END_SRC
-
-** Powerline
-   #+BEGIN_SRC emacs-lisp
-     (use-package powerline
-       :ensure t
-       :config
-       (powerline-default-theme))
-   #+END_SRC
-
-   #+RESULTS:
-   : t
-
-** Spaceline
-   #+BEGIN_SRC emacs-lisp
-     (use-package spaceline
-       :ensure t)
-   #+END_SRC
-
-   #+RESULTS:
-
 * Windows, Frames, Buffers
 ** Window Dividers
    #+BEGIN_SRC emacs-lisp
@@ -242,7 +113,6 @@ Literate org-based configuration file.
        (interactive)
        (set-window-width 80))
    #+END_SRC
-
 * Editing
 ** Spaces instead of tabs
    #+BEGIN_SRC emacs-lisp
@@ -373,7 +243,6 @@ Literate org-based configuration file.
    #+END_SRC
 
 ** Mark Ring Navigation
-
 * Version Control
 * Terminal
 ** Multiterm
@@ -381,8 +250,20 @@ Literate org-based configuration file.
      (use-package multi-term
        :ensure t)
    #+END_SRC
-
 * Programming
+** Auto-revert for programming
+   Used to be useful when editing from multiple applications. No longer in use
+   due to long load pauses.
+   #+BEGIN_SRC emacs-lisp
+     ;;(add-hook 'c-mode-common-hook 'auto-revert-mode)
+   #+END_SRC
+** Enforce 80 char column width
+   #+BEGIN_SRC emacs-lisp
+     (use-package column-enforce-mode
+       :ensure t
+       :config
+       (add-hook 'prog-mode-hook 'column-enforce-mode))
+   #+END_SRC
 ** GTags
    #+BEGIN_SRC emacs-lisp
      (add-hook 'c-mode-hook 'counsel-gtags-mode)
@@ -398,20 +279,6 @@ Literate org-based configuration file.
 
    #+RESULTS:
    : counsel-gtags-go-backward
-
-** Auto-revert for programming
-   Used to be useful when editing from multiple applications. No longer in use
-   due to long load pauses.
-   #+BEGIN_SRC emacs-lisp
-     ;;(add-hook 'c-mode-common-hook 'auto-revert-mode)
-   #+END_SRC
-** Enforce 80 char column width
-   #+BEGIN_SRC emacs-lisp
-     (use-package column-enforce-mode
-       :ensure t
-       :config
-       (add-hook 'prog-mode-hook 'column-enforce-mode))
-   #+END_SRC
 ** Toggle comment line/region
    #+BEGIN_SRC emacs-lisp
      (defun comment-or-uncomment-region-or-line ()
@@ -449,7 +316,7 @@ Literate org-based configuration file.
                                (setq comment-start "//")
                                (setq comment-end "")))
     #+END_SRC
-** MATLAB Mode
+** matlab Mode
    #+BEGIN_SRC emacs-lisp
      (autoload 'matlab-mode "matlab" "Matlab Editing Mode" t)
      (add-to-list
@@ -464,14 +331,18 @@ Literate org-based configuration file.
     #+BEGIN_SRC emacs-lisp
       (define-key c-mode-base-map (kbd "C-c f") 'ff-find-other-file)
     #+END_SRC
-** Web-mode
+** web-mode
    #+BEGIN_SRC emacs-lisp
      (use-package web-mode
        :ensure t)
    #+END_SRC
 
    #+RESULTS:
-
+** elisp
+   #+BEGIN_SRC emacs-lisp
+     (use-package elisp-refs
+       :ensure t)
+   #+END_SRC
 * Compiling
 ** Prevent Interactive Compilation
    #+BEGIN_SRC emacs-lisp
@@ -479,7 +350,6 @@ Literate org-based configuration file.
    #+END_SRC
 
    #+RESULTS:
-
 * Keybind
   Regular way to set keybinds is =(global-set-key /key/ /binding/)=.
 ** Hydra
@@ -571,6 +441,7 @@ Literate org-based configuration file.
      (global-set-key (kbd "C-c C-<down>")  'windmove-down)
 
      (global-set-key (kbd "C-'")  'compile)
+     (global-set-key (kbd "C-l")  'goto-line)
 
 
    #+END_SRC
@@ -578,14 +449,7 @@ Literate org-based configuration file.
    #+RESULTS:
    : compile
 
-
 ** Bind hydras
-* Registers
-  Add often used files to registers for quick navigation.  Form for adding to
-  the register is =(set-register ?r '(file . /name/))=
-  #+BEGIN_SRC emacs-lisp
-      ;;(set-register ?1 '(file . "h:/projects/diplr_troubleshoot_tool/DTTD/dttd.c"))
-  #+END_SRC
 * User Defined Functions
 ** Copy file path of current buffer
    #+BEGIN_SRC emacs-lisp
@@ -611,6 +475,137 @@ Literate org-based configuration file.
               (message "File path copied: %s" -fpath)
               -fpath )))))
    #+END_SRC
+* Display Preferences
+** Themes
+*** Doom theme
+  #+BEGIN_SRC emacs-lisp
+    ;; (use-package doom-themes
+    ;;   :ensure t
+    ;;   :config
+    ;;   (load-theme 'doom-one t)
+    ;;   (setq org-ellipsis "..."))
+   #+END_SRC
+*** Nord theme
+    #+BEGIN_SRC emacs-lisp
+      (use-package nord-theme
+        :ensure t
+        :config
+        (load-theme 'nord t)
+        (setq org-ellipsis "..."))
+    #+END_SRC
+
+    #+RESULTS:
+    : t
+
+** Fonts
+   #+BEGIN_SRC emacs-lisp
+     (add-to-list 'default-frame-alist '(font . "Courier New-8.0" ))
+     (set-face-attribute 'default t :font "Courier New-8.0" )
+   #+END_SRC
+** Hide menu, toolbar and scrollbar
+   #+BEGIN_SRC emacs-lisp
+     (menu-bar-mode -1)
+     (tool-bar-mode -1)
+     (scroll-bar-mode -1)
+   #+END_SRC
+
+** Turn off audible warning bell
+   #+BEGIN_SRC emacs-lisp
+     (setq visible-bell 1)
+   #+END_SRC
+** Inhibit startup screens
+   #+BEGIN_SRC emacs-lisp
+     (setq inhibit-startup-screen t)
+     (setq inhibit-splash-screen t)
+   #+END_SRC
+
+** Disable auto-save and backups
+   Backup files are annoying and not useful to me, so disable them.
+   #+BEGIN_SRC emacs-lisp
+     (setq backup-inhibited t)
+     (setq auto-save-default nil)
+   #+END_SRC
+
+** Show column numbers
+   I always want to see column numbers
+   #+BEGIN_SRC emacs-lisp
+     (setq column-number-mode t)
+   #+END_SRC
+
+** Pretty org-mode bullets
+   #+BEGIN_SRC emacs-lisp
+     (use-package org-bullets
+       :ensure t
+       :init
+       (setq org-bullets-bullet-list
+             '("◉" "◎" "<img draggable="false" class="emoji" alt="⚫" src="https://s0.wp.com/wp-content/mu-plugins/wpcom-smileys/twemoji/2/svg/26ab.svg">" "○" "►" "◇"))
+       :config
+       (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1))))
+   #+END_SRC
+** Fringe settings
+   Remove right-hand fringe to save precious room
+   #+BEGIN_SRC emacs-lisp
+     (fringe-mode '(4 . 0))
+   #+END_SRC
+
+   #+RESULTS:
+** Show line numbers in fringe
+   Line numbers are useful in programming modes, but not really in other
+   modes.
+   #+BEGIN_SRC emacs-lisp
+     (use-package nlinum
+       :ensure t
+       :config
+       (add-hook 'prog-mode-hook 'nlinum-mode))
+   #+END_SRC
+
+** Fill settings
+   Enable auto-fill mode and set fill width.
+   #+BEGIN_SRC emacs-lisp
+     (add-hook 'text-mode-hook 'turn-on-auto-fill)
+     (setq-default fill-column 80)
+   #+END_SRC
+
+** Highlight trailing whitespace
+   I like to see if I have trailing whitespace.
+   #+BEGIN_SRC emacs-lisp
+     (setq-default show-trailing-whitespace t)
+     (add-hook 'term-mode-hook (lambda () (setq show-trailing-whitespace nil)))
+   #+END_SRC
+** Rainbow Delimiters
+   #+BEGIN_SRC emacs-lisp
+     (use-package rainbow-delimiters
+       :ensure t
+       :config
+       (add-hook 'prog-mode-hook 'rainbow-delimiters-mode))
+   #+END_SRC
+
+** Powerline
+   #+BEGIN_SRC emacs-lisp
+     (use-package powerline
+       :ensure t
+       :config
+       (powerline-default-theme))
+   #+END_SRC
+
+   #+RESULTS:
+   : t
+
+** Spaceline
+   #+BEGIN_SRC emacs-lisp
+     (use-package spaceline
+       :ensure t)
+   #+END_SRC
+
+   #+RESULTS:
+
+** Dired
+*** Omit dotfiles from dired
+    #+BEGIN_SRC emacs-lisp
+      (require 'dired-x)
+      (setq-default dired-omit-files-p t) ; Buffer-local variable
+      (setq dired-omit-files (concat dired-omit-files "\\|^\\..+$"))
+    #+END_SRC
 * Initialization
 ** Open to default buffer
    Automatically open a todo org document on startup
